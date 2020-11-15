@@ -1,3 +1,20 @@
+/*
+ * Copyright 2020 Valstack Info Pvt Ltd,India.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package route
 
 import (
@@ -7,10 +24,9 @@ import (
 )
 
 type Route struct {
-
+	IsPrivate bool
 	// Any http method. It will be used as uppercase to avoid common mistakes.
 	HttpMethod string
-
 	// A string like "/resource/:id.json".
 	// Placeholders supported are:
 	// :param that matches any char to the first '/' or '.'
@@ -54,15 +70,15 @@ func escapedPath(urlObj *url.URL) string {
 // This validates the Routes and prepares the Trie data structure.
 // It must be called once the Routes are defined and before trying to find Routes.
 // The order matters, if multiple Routes match, the first defined will be used.
-func (self *Router) start() error {
+func (router *Router) start() error {
 
-	self.trie = NewTrie()
-	self.index = map[*Route]int{}
+	router.trie = NewTrie()
+	router.index = map[*Route]int{}
 
-	for i, _ := range self.routes {
+	for i := range router.routes {
 
 		// pointer to the Route
-		route := &self.routes[i]
+		route := &router.routes[i]
 
 		// PathExp validation
 		if route.PathExp == "" {
@@ -84,7 +100,7 @@ func (self *Router) start() error {
 		pathExp = strings.Replace(pathExp, "%2A", "*", -1)
 
 		// insert in the Trie
-		err = self.trie.AddRoute(
+		err = router.trie.AddRoute(
 			strings.ToUpper(route.HttpMethod), // work with the HttpMethod in uppercase
 			pathExp,
 			route,
@@ -94,11 +110,11 @@ func (self *Router) start() error {
 		}
 
 		// index
-		self.index[route] = i
+		router.index[route] = i
 	}
 
-	if self.disableTrieCompression == false {
-		self.trie.Compress()
+	if router.disableTrieCompression == false {
+		router.trie.Compress()
 	}
 
 	return nil
@@ -119,6 +135,17 @@ func (self *Router) ofFirstDefinedRoute(matches []*Match) *Match {
 	}
 
 	return matchesByIndex[minIndex]
+}
+func (self *Router) AddRoute(route Route) error {
+	err := self.trie.AddRoute(
+		strings.ToUpper(route.HttpMethod), // work with the HttpMethod in uppercase
+		route.PathExp,
+		&route,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Return the first matching Route and the corresponding parameters for a given URL object.

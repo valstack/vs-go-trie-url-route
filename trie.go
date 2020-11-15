@@ -16,7 +16,7 @@ import (
 
 func splitParam(remaining string) (string, string) {
 	i := 0
-	for len(remaining) > i && remaining[i] != '/' && remaining[i] != '.' {
+	for len(remaining) > i && remaining[i] != '/' {
 		i++
 	}
 	return remaining[:i], remaining[i:]
@@ -236,7 +236,7 @@ type Trie struct {
 	root *node
 }
 
-// Instanciate a Trie with an empty node as the root.
+// Instantiate a Trie with an empty node as the root.
 func NewTrie() *Trie {
 	return &Trie{
 		root: &node{},
